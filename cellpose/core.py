@@ -762,9 +762,10 @@ class UnetModel():
             y, style = self.net(X)
             del X
             loss = self.loss_fn(lbl,y)
+            ap = metrics.average_precision(lbl, y)[0]
             test_loss = loss.item()
             test_loss *= len(x)
-        return test_loss
+        return test_loss, ap
 
     def _set_optimizer(self, learning_rate, momentum, weight_decay, SGD=False):
         if SGD:
@@ -906,6 +907,7 @@ class UnetModel():
                     lavgt, nsum = 0., 0
                     np.random.seed(42)
                     rperm = np.arange(0, len(test_data), 1, int)
+                    ap_sum = 0
                     for ibatch in range(0,len(test_data),batch_size):
                         inds = rperm[ibatch:ibatch+batch_size]
                         rsc = diam_test[inds] / self.diam_mean if rescale else np.ones(len(inds), np.float32)
@@ -915,12 +917,13 @@ class UnetModel():
                         if self.unet and lbl.shape[1]>1 and rescale:
                             lbl[:,1] *= scale[:,np.newaxis,np.newaxis]**2
 
-                        test_loss = self._test_eval(imgi, lbl)
+                        test_loss, ap = self._test_eval(imgi, lbl)
+                        ap_sum += ap[:,0].mean()
                         lavgt += test_loss
                         nsum += len(imgi)
 
-                    core_logger.info('Epoch %d, Time %4.1fs, Loss %2.4f, Loss Test %2.4f, LR %2.4f'%
-                            (iepoch, time.time()-tic, lavg, lavgt/nsum, self.learning_rate[iepoch]))
+                    core_logger.info('Epoch %d, Time %4.1fs, Loss %2.4f, Loss Test %2.4f LR %2.4f => AP at iou threshold 0.5 is %2.4f'%
+                            (iepoch, time.time()-tic, lavg, lavgt / nsum, self.learning_rate[iepoch], ap_sum / nsum))
                 else:
                     core_logger.info('Epoch %d, Time %4.1fs, Loss %2.4f, LR %2.4f'%
                             (iepoch, time.time()-tic, lavg, self.learning_rate[iepoch]))

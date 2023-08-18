@@ -582,7 +582,7 @@ class CellposeModel(UnetModel):
                                                                       )
 
             flows = [plot.dx_to_circ(dP), dP, cellprob, p]
-            return masks, flows, styles, row_output
+            return masks, flows, styles, dP
 
     def _run_cp(self, x, compute_masks=True, normalize=True, invert=False,
                 rescale=1.0, net_avg=False, resample=True,

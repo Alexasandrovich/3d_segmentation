@@ -127,14 +127,15 @@ def show_segmentation(img, maski, flowi, label, channels=[0,0], file_name=None):
     # draw
     roi = (0, 1200, 2654, 300)
 
-
-   #  axes[0].imshow(ROI(imgout, roi))
-   #  axes[0].set_title('predicted outlines', loc='right', backgroundcolor='white')
-   #  axes[0].axis('off')
-
-   #  axes[1].imshow(ROI(overlay,roi))
-   #  axes[1].set_title('predicted masks', loc='right', backgroundcolor='white')
-   #  axes[1].axis('off')
+    '''
+        axes[0].imshow(ROI(label[2], roi))
+        axes[0].set_title('predicted outlines', loc='right', backgroundcolor='white')
+        axes[0].axis('off')
+    
+        axes[1].imshow(ROI(label[3],roi))
+        axes[1].set_title('predicted masks', loc='right', backgroundcolor='white')
+        axes[1].axis('off')
+    '''
 
     axes[0].imshow(ROI(flowi, roi))
     axes[0].set_title('predicted flows', loc='right', backgroundcolor='white')
