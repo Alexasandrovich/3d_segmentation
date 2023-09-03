@@ -41,7 +41,8 @@ io_logger = logging.getLogger(__name__)
 def logger_setup():
     cp_dir = pathlib.Path.home().joinpath('.cellpose')
     cp_dir.mkdir(exist_ok=True)
-    log_file = cp_dir.joinpath('run.log')
+    now = datetime.datetime.now()
+    log_file = cp_dir.joinpath(f'run_{now.strftime("%d_%m_%Y__%H_%M_%S")}.log')
     try:
         log_file.unlink()
     except:
@@ -185,6 +186,7 @@ def get_image_files(folder, mask_filter, imf=None, look_one_level_down=False):
     l0 = 0
     al = 0
     for folder in folders:
+        print(folder)
         all_files = glob.glob(folder + '/*')
         al += len(all_files)
         for ext in exts:
@@ -295,6 +297,7 @@ def load_images_labels(tdir, mask_filter='_masks', image_filter=None, look_one_l
 
 def load_train_test_data(train_dir, test_dir=None, image_filter=None, mask_filter='_masks', unet=False,
                          look_one_level_down=False):
+    print(f"train_dir = {train_dir}")
     images, labels, image_names = load_images_labels(train_dir, mask_filter, image_filter, look_one_level_down, unet)
 
     # testing data

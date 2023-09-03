@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from tqdm import trange, tqdm
 from cellpose import models
-from cellpose.io import logger_setup, imread, imsave
+from cellpose.io_custom import logger_setup, imread, imsave
 from cellpose import metrics, transforms, utils, resnet_torch
 from datasets import reshape_and_normalize
 

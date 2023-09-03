@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from glob import glob
 from cellpose import models
-from cellpose.io import logger_setup
+from cellpose.io_custom import logger_setup
 from cellpose.transforms import normalize_img
 from cellpose import metrics
 from tqdm import tqdm, trange
@@ -73,7 +73,7 @@ def get_all_files(root):
 
 def load_train_test_all(train_files, train_types, test_files, test_types):
     """ reshape train and test data with cyto chan 0 and nuclei chan 1 """
-    from cellpose.io import imread
+    from cellpose.io_custom import imread
     train_data = [reshape_and_normalize(imread(train_files[i]), train_types[i]) 
                   for i in trange(len(train_files))]
     test_data = [reshape_and_normalize(imread(test_files[i]), test_types[i]) 

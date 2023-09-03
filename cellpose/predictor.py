@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from cellpose import models, metrics, plot, core
-from cellpose.io import imread
+from cellpose.io_custom import imread
 import numpy as np
 from cellpose.plot import dx_to_circ
 import cv2
@@ -15,7 +15,7 @@ def evel_metrics(label, pred, dP, flows):
     # print(f"aggregated_jaccard_index = {metrics.aggregated_jaccard_index(label, pred)}")
     scales = np.arange(0.025, 0.275, 0.025)
     # print(f"boundary_scores = {metrics.boundary_scores(label, pred, scales)}")
-    print(f"mask_ious = {metrics.mask_ious(label, pred)[0]}")
+    print(f"mask_ious = {metrics.mask_ious(label, pred)[0].mean()}")
 
 
 def do_inference():

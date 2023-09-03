@@ -6,7 +6,7 @@ import sys, os, glob, pathlib, time
 import numpy as np
 from natsort import natsorted
 from tqdm import tqdm
-from cellpose import utils, models, io, core, version_str
+from cellpose import utils, models, io_custom, core, version_str
 from cellpose.cli import get_arg_parser
 
 try:
@@ -42,7 +42,7 @@ def main():
     
     if len(args.dir)==0 and len(args.image_path)==0:
         if args.add_model:
-            io.add_model(args.add_model)
+            io_custom.add_model(args.add_model)
         else:
             if not GUI_ENABLED:
                 print('GUI ERROR: %s'%GUI_ERROR)
@@ -54,7 +54,7 @@ def main():
 
     else:
         if args.verbose:
-            from .io import logger_setup
+            from io_custom import logger_setup
             logger, log_file = logger_setup()
         else:
             print('>>>> !NEW LOGGING SETUP! To see cellpose progress, set --verbose')
@@ -98,13 +98,14 @@ def main():
                 szmean = 30.
         builtin_size = model_type == 'cyto' or model_type == 'cyto2' or model_type == 'nuclei'
         
-        if len(args.image_path) > 0 and (args.train or args.train_size):
-            raise ValueError('ERROR: cannot train model with single image input')
+        #if len(args.image_path) > 0 and (args.train or args.train_size):
+        #    raise ValueError(f'ERROR: cannot train model with single image input, because '
+        #                     f'len(args.image_path) = {args.image_path} and args.train = {args.train}, args.train_size = {args.train_size}')
 
         if not args.train and not args.train_size:
             tic = time.time()
             if len(args.dir) > 0:
-                image_names = io.get_image_files(args.dir,
+                image_names = io_custom.get_image_files(args.dir,
                                                 args.mask_filter, 
                                                 imf=imf,
                                                 look_one_level_down=args.look_one_level_down)
@@ -151,7 +152,7 @@ def main():
             tqdm_out = utils.TqdmToLogger(logger,level=logging.INFO)
             
             for image_name in tqdm(image_names, file=tqdm_out):
-                image = io.imread(image_name)
+                image = io_custom.imread(image_name)
                 out = model.eval(image, channels=channels, diameter=diameter,
                                 do_3D=args.do_3D, net_avg=(not args.fast_mode or args.net_avg),
                                 augment=False,
@@ -176,19 +177,19 @@ def main():
                 if args.exclude_on_edges:
                     masks = utils.remove_edge_masks(masks)
                 if not args.no_npy:
-                    io.masks_flows_to_seg(image, masks, flows, diams, image_name, channels)
+                    io_custom.masks_flows_to_seg(image, masks, flows, diams, image_name, channels)
                 if saving_something:
-                    io.save_masks(image, masks, flows, image_name, png=args.save_png, tif=args.save_tif,
+                    io_custom.save_masks(image, masks, flows, image_name, png=args.save_png, tif=args.save_tif,
                                   save_flows=args.save_flows,save_outlines=args.save_outlines,
                                   save_ncolor=args.save_ncolor,dir_above=args.dir_above,savedir=args.savedir,
                                   save_txt=args.save_txt,in_folders=args.in_folders)
                 if args.save_rois:
-                    io.save_rois(masks, image_name)
+                    io_custom.save_rois(masks, image_name)
             logger.info('>>>> completed in %0.3f sec'%(time.time()-tic))
         else:
             
             test_dir = None if len(args.test_dir)==0 else args.test_dir
-            output = io.load_train_test_data(args.dir, test_dir, imf, args.mask_filter, args.unet, args.look_one_level_down)
+            output = io_custom.load_train_test_data(args.dir, test_dir, imf, args.mask_filter, args.unet, args.look_one_level_down)
             images, labels, image_names, test_images, test_labels, image_names_test = output
 
             # training with all channels
@@ -252,7 +253,7 @@ def main():
                 logger.info('>>>> model trained and saved to %s'%cpmodel_path)
 
             # train size model
-            if args.train_size:
+            if args.train_size and False:
                 sz_model = models.SizeModel(cp_model=model, device=device)
                 masks = [lbl[0] for lbl in labels]
                 test_masks = [lbl[0] for lbl in test_labels] if test_labels is not None else test_labels

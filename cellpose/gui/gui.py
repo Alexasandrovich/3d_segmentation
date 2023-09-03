@@ -22,7 +22,7 @@ import cv2
 from . import guiparts, menus, io
 from .. import models, core, dynamics, version
 from ..utils import download_url_to_file, masks_to_outlines, diameters 
-from ..io import get_image_files, imsave, imread
+from ..io_custom import get_image_files, imsave, imread
 from ..transforms import resize_image, normalize99 #fixed import
 from ..plot import disk
 
@@ -124,7 +124,7 @@ def make_cmap(cm=0):
 
 global logger
 def run():
-    from ..io import logger_setup
+    from ..io_custom import logger_setup
     global logger
     logger, log_file = logger_setup()
     # Always start by initializing Qt (only once per application)

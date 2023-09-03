@@ -15,7 +15,7 @@ from matplotlib import rc
 from scipy import stats
 from scipy.ndimage import find_objects
 from scipy.optimize import linear_sum_assignment
-from cellpose import models, datasets, utils, transforms, io, metrics, plot
+from cellpose import models, datasets, utils, transforms, io_custom, metrics, plot
 
 thresholds = np.arange(0.5, 1.05, 0.05)
 

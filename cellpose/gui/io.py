@@ -11,7 +11,7 @@ import logging
 import fastremap 
 
 from .. import utils, plot, transforms, models
-from ..io import imread, imsave, outlines_to_text, add_model, remove_model, save_rois
+from ..io_custom import imread, imsave, outlines_to_text, add_model, remove_model, save_rois
 from ..transforms import normalize99
 
 try:

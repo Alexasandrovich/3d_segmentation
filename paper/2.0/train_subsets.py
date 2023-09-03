@@ -7,7 +7,7 @@ from tifffile import imread, imsave
 import numpy as np
 from glob import glob
 from cellpose import models
-from cellpose.io import logger_setup
+from cellpose.io_custom import logger_setup
 from cellpose import metrics
 from datasets import *
 

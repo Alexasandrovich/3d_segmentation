@@ -760,12 +760,33 @@ class UnetModel():
         self.net.eval()
         with torch.no_grad():
             y, style = self.net(X)
-            del X
             loss = self.loss_fn(lbl,y)
-            ap = metrics.average_precision(lbl, y)[0]
+
+            # evaluate metrics
+            masks, flows, styles, dP = self.eval(X, diameter=None, channels=[[0, 0]], net_avg=False, progress=True, flow_threshold=0.0)
+            del X
+            _, pred_masks = cv2.threshold(masks, 0, 255, cv2.THRESH_BINARY)
+            pred_masks = (pred_masks / 255).astype(int)
+            label_masks = lbl.astype(int)
+
+            if pred_masks.any() > 0:
+                average_precision, tp, fp, fn = metrics.average_precision(label_masks, pred_masks)
+                average_precision = average_precision.mean()
+
+                # flow_error, dP_masks = metrics.flow_error(pred_masks, dP) # todo: remove bag
+                flow_error = 999999
+                mask_ious, _ = metrics.mask_ious(label_masks, pred_masks)
+                if mask_ious.shape[0] == 0:
+                    mask_ious = 0
+            else:
+                core_logger.info("Predicted masks have only zeroes cells")
+                average_precision = 0
+                flow_error = 0
+                mask_ious = 0
+
             test_loss = loss.item()
             test_loss *= len(x)
-        return test_loss, ap
+        return test_loss, average_precision, flow_error, mask_ious
 
     def _set_optimizer(self, learning_rate, momentum, weight_decay, SGD=False):
         if SGD:
@@ -907,7 +928,10 @@ class UnetModel():
                     lavgt, nsum = 0., 0
                     np.random.seed(42)
                     rperm = np.arange(0, len(test_data), 1, int)
-                    ap_sum = 0
+                    AP_sum = 0 # average_precision
+                    FE_sum = 0 # flow_error
+                    MI_sum = 0 # mask_ious
+
                     for ibatch in range(0,len(test_data),batch_size):
                         inds = rperm[ibatch:ibatch+batch_size]
                         rsc = diam_test[inds] / self.diam_mean if rescale else np.ones(len(inds), np.float32)
@@ -917,13 +941,21 @@ class UnetModel():
                         if self.unet and lbl.shape[1]>1 and rescale:
                             lbl[:,1] *= scale[:,np.newaxis,np.newaxis]**2
 
-                        test_loss, ap = self._test_eval(imgi, lbl)
-                        ap_sum += ap[:,0].mean()
+                        test_loss, average_precision, flow_error, mask_ious = self._test_eval(imgi, lbl)
+                        AP_sum += average_precision
+                        FE_sum += flow_error
+                        MI_sum += mask_ious
                         lavgt += test_loss
                         nsum += len(imgi)
 
-                    core_logger.info('Epoch %d, Time %4.1fs, Loss %2.4f, Loss Test %2.4f LR %2.4f => AP at iou threshold 0.5 is %2.4f'%
-                            (iepoch, time.time()-tic, lavg, lavgt / nsum, self.learning_rate[iepoch], ap_sum / nsum))
+                    core_logger.info(f'Epoch = {iepoch}, '
+                                     f'Time = {time.time()-tic}s, '
+                                     f'Loss = {lavg}, '
+                                     f'Loss_test = {lavgt / nsum}, '
+                                     f'LR = {self.learning_rate[iepoch]}, '
+                                     f'AP(iou_threshold=0.5) = {AP_sum / nsum}, '
+                                     f'Flow_error = {FE_sum / nsum}, '
+                                     f'Mask_ious = {MI_sum / nsum}\n')
                 else:
                     core_logger.info('Epoch %d, Time %4.1fs, Loss %2.4f, LR %2.4f'%
                             (iepoch, time.time()-tic, lavg, self.learning_rate[iepoch]))
